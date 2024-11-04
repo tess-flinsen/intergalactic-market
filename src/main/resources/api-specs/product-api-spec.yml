@@ -173,11 +173,12 @@ components:
         - id
         - name
         - price
-        - count
         - category
+        - owner
       properties:
         id:
           type: string
+          format: uuid
           description: Product UUID assigned by the system.
           example: 550e8400-e29b-41d4-a716-446655440000
         name:
@@ -199,26 +200,30 @@ components:
           example: 10.99
           minimum: 0.01
           maximum: 100000.00
-        count:
+        stockCount:
           type: integer
           description: Available stock quantity.
           example: 50
           minimum: 0
           maximum: 10000
         category:
-          type: string
-          description: Product category.
-          example: Cat Care Products
-          minLength: 5
-          maxLength: 30
+          type: integer
+          description: Identifier of product category.
+          example: 42
+          minimum: 1
+        owner:
+          type: integer
+          description: Identifier of the customer who owns the product.
+          example: 1234567890
+          minimum: 1
 
     ProductDetailsDto:
       type: object
       required:
         - name
         - price
-        - count
         - category
+        - owner
       properties:
         name:
           type: string
@@ -230,12 +235,15 @@ components:
           type: number
           format: double
           description: Product price in credits
-        count:
+        stockCount:
           type: integer
           description: Available stock quantity
         category:
-          type: string
+          type: object
           description: Product category
+        owner:
+          type: object
+          description: Customer who owns the product
 
         
     ErrorResponse:
