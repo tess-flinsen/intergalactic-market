@@ -47,7 +47,7 @@ paths:
             Location:
               schema:
                 type: string
-                example: '/v1/products/42'
+                example: '/v1/products/550e8400-e29b-41d4-a716-446655440000'
               description: Direct URL to the newly created product
         '400':
           description: Invalid input data
@@ -71,9 +71,10 @@ paths:
         - in: path
           name: id
           schema:
-            type: integer
+            type: string
+            format: uuid
           required: true
-          description: Unique id of the product to get
+          description: Unique UUID of the product to get
       responses:
         '200':
           description: Product found
@@ -96,9 +97,10 @@ paths:
         - in: path
           name: id
           schema:
-            type: integer
+            type: string
+            format: uuid
           required: true
-          description: Unique id of the product to update
+          description: Unique UUID of the product to update
       requestBody:
         description: Updated product data
         required: true
@@ -134,9 +136,10 @@ paths:
         - in: path
           name: id
           schema:
-            type: integer
+            type: string
+            format: uuid
           required: true
-          description: Unique id of the product to delete
+          description: Unique UUID of the product to delete
       responses:
         '204':
           description: Product successfully deleted
@@ -174,10 +177,9 @@ components:
         - category
       properties:
         id:
-          type: integer
-          description: Product ID assigned by the system.
-          example: 42
-          minimum: 1
+          type: string
+          description: Product UUID assigned by the system.
+          example: 550e8400-e29b-41d4-a716-446655440000
         name:
           type: string
           description: Name of the product.
@@ -252,10 +254,10 @@ components:
           example: Not found
         message:
           type: string
-          example: "Product with ID 42 not found."
+          example: "Product with ID 550e8400-e29b-41d4-a716-446655440000 not found."
         path:
           type: string
-          example: /v1/products/42
+          example: /v1/products/550e8400-e29b-41d4-a716-446655440000
           
     ValidationError:
       type: object
@@ -287,4 +289,3 @@ components:
           type: string
           description: Explanation of the validation error
           example: "Must be between 2 and 50 characters."
-          
