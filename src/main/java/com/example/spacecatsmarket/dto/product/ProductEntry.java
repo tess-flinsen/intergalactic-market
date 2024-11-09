@@ -14,6 +14,6 @@ public class ProductEntry {
     String description;
     double price;
     int stockCount;
-    int categoryId;  
-    Long ownerId; 
+    int category;  
+    Long owner; 
 }
