@@ -29,8 +29,8 @@ public interface ProductMapper {
     @Mapping(target = "description", source = "description")
     @Mapping(target = "price", source = "price")
     @Mapping(target = "stockCount", source = "stockCount")
-    @Mapping(target = "category", source = "category")
-    @Mapping(target = "owner", source = "owner")
+    @Mapping(target = "category", source = "category.id")
+    @Mapping(target = "owner", source = "owner.id")
     ProductEntry toProductEntry(Product product);
 
     @Mapping(target = "name", source = "name")
