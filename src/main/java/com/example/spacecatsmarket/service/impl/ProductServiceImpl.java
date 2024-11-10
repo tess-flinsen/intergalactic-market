@@ -9,9 +9,7 @@ import com.example.spacecatsmarket.service.exception.PermissionDeniedException;
 import com.example.spacecatsmarket.service.exception.ProductListEmptyException;
 import com.example.spacecatsmarket.service.exception.ProductNotFoundException;
 
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,11 +20,12 @@ import java.util.ArrayList;
 @Service
 public class ProductServiceImpl implements ProductService {
 
-    private final List<Product> products = buildMockProducts();
+    private final List<Product> products;
     private final CustomerService customerService;
 
     public ProductServiceImpl(CustomerService customerService) {
         this.customerService = customerService;
+        this.products = buildMockProducts();
     }
 
     @Override

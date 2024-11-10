@@ -12,7 +12,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.example.spacecatsmarket.service.exception.CustomerNotFoundException;
 import com.example.spacecatsmarket.service.exception.PermissionDeniedException;
@@ -24,7 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @ControllerAdvice
 @Slf4j
-public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+public class GlobalExceptionHandler {
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ProblemDetail> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
         log.error("Validation failed: {}", ex.getMessage(), ex);
