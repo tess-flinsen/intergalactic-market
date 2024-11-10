@@ -4,9 +4,9 @@ import java.net.URI;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.spacecatsmarket.domain.Product;
@@ -14,7 +14,6 @@ import com.example.spacecatsmarket.dto.product.ProductDetailsDto;
 import com.example.spacecatsmarket.dto.product.ProductDetailsListDto;
 import com.example.spacecatsmarket.service.ProductService;
 import com.example.spacecatsmarket.service.mapper.ProductMapper;
-import com.example.spacecatsmarket.web.exception.ValidationError;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.headers.Header;
@@ -44,7 +43,7 @@ public class ProductController {
         @ApiResponse(responseCode = "200", description = "List of all products retrieved successfully",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDetailsListDto.class))),
         @ApiResponse(responseCode = "404", description = "No available products in the marketplace",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping
     public ResponseEntity<ProductDetailsListDto> getAllProducts() {
@@ -57,7 +56,7 @@ public class ProductController {
         @ApiResponse(responseCode = "200", description = "Product found", 
                      content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDetailsDto.class))),
         @ApiResponse(responseCode = "404", description = "Product not found", 
-                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/{id}")
     public ResponseEntity<ProductDetailsDto> getProductById(@PathVariable UUID id) {
@@ -69,14 +68,14 @@ public class ProductController {
     @PostMapping
     @Operation(summary = "Create a new product", description = "Create a new product with specified details.")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Product successfully created",
+        @ApiResponse(responseCode = "201", description = "Product created successfully",
                     headers = @Header(name = "Location", description = "URL to newly created product",
                                     schema = @Schema(type = "string", example = "/v1/products/550e8400-e29b-41d4-a716-446655440000")),
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDetailsDto.class))),
         @ApiResponse(responseCode = "400", description = "Invalid input data", 
-                    content = @Content(schema = @Schema(ref = "#/components/schemas/ValidationError"))),
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
         @ApiResponse(responseCode = "409", description = "Product already exists", 
-                    content = @Content(schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     public ResponseEntity<ProductDetailsDto> createProduct(
         @RequestBody @Valid ProductDetailsDto productDetailsDto, @RequestHeader Long customerId) {
@@ -98,11 +97,11 @@ public class ProductController {
         ),
         @ApiResponse(
             responseCode = "400", description = "Invalid input data",
-            content = @Content( mediaType = "application/json", schema = @Schema(implementation = ValidationError.class))
+            content = @Content( mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class))
         ),
         @ApiResponse(
             responseCode = "404", description = "Product not found", 
-            content = @Content( mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+            content = @Content( mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class))
         )
     })
     public ResponseEntity<?> updateProduct(
@@ -123,9 +122,9 @@ public class ProductController {
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "Product successfully deleted"),
         @ApiResponse(responseCode = "403", description = "Deletion forbidden due to insufficient permissions", 
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class))),
         @ApiResponse(responseCode = "404", description = "Product not found", 
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)))
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProduct(
