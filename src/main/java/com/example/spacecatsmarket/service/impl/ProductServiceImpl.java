@@ -25,7 +25,7 @@ public class ProductServiceImpl implements ProductService {
 
     public ProductServiceImpl(CustomerService customerService) {
         this.customerService = customerService;
-        this.products = buildMockProducts();
+        this.products = new ArrayList<>(buildMockProducts());
     }
 
     @Override
