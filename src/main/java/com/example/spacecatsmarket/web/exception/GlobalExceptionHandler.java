@@ -25,6 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(PermissionDeniedException.class)
+    public ResponseEntity<ProblemDetail> handlePermissionDenied(PermissionDeniedException ex, WebRequest request) {
+        log.error("Permission denied: {}", ex.getMessage(), ex);
+        return ProblemDetailUtils.createProblemDetailResponse(HttpStatus.FORBIDDEN, "Permission Denied", ex.getMessage(), request);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ProblemDetail> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
         log.error("Validation failed: {}", ex.getMessage(), ex);
@@ -59,11 +65,6 @@ public class GlobalExceptionHandler {
         return ProblemDetailUtils.createProblemDetailResponse(HttpStatus.NOT_FOUND, "No Products Available", ex.getMessage(), request);
     }
 
-    @ExceptionHandler(PermissionDeniedException.class)
-    public ResponseEntity<ProblemDetail> handlePermissionDenied(PermissionDeniedException ex, WebRequest request) {
-        log.error("Permission denied: {}", ex.getMessage(), ex);
-        return ProblemDetailUtils.createProblemDetailResponse(HttpStatus.FORBIDDEN, "Permission Denied", ex.getMessage(), request);
-    }
 
     @ExceptionHandler(CustomerNotFoundException.class)
     public ResponseEntity<ProblemDetail> handleCustomerNotFound(CustomerNotFoundException ex, WebRequest request) {
@@ -75,7 +76,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleAllExceptions(Exception ex, WebRequest request) {
         log.error("An unexpected error occurred: {}", ex.getMessage(), ex);
 
-        return ProblemDetailUtils.createProblemDetailResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", 
+        return ProblemDetailUtils.createProblemDetailResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Ooops: Internal Server Error!", 
                                                             ex.getMessage(), request);
     }
 }

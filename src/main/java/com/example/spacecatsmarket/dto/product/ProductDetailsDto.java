@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Size;
@@ -32,7 +33,7 @@ public class ProductDetailsDto {
     @Size(max = 300, message = "Product description could not be longer than 300 characters")
     String description;
 
-    @NotBlank(message = "Price could not be blank")
+    @NotNull(message = "Price could not be blank")
     @DecimalMin(value = "0.01", message = "Price could not be less than 0.01")
     @DecimalMax(value = "100000", message = "Price could not exceed 100,000")
     double price;
