@@ -18,15 +18,23 @@ repositories {
 	mavenCentral()
 }
 
+// ext {
+//     minimumCoveragePerFile = 0.9
+//     filesExcludedFromCoverage = [
+//             "**/*SpaceCatesMarketApplication.*",
+//             "**/domain/*",
+//             "**/dto/*",
+//             "**/util/*",
+//             "**/web/*",
+//             "**/service/mapper*",
+//             "**/*CustomerService*",
+//             "**/config/*Configuration.*"
+//     ]
+// }
 ext {
-    minimumCoveragePerFile = 0.5
+    minimumCoveragePerFile = 0.9
     filesExcludedFromCoverage = [
             "**/*SpaceCatesMarketApplication.*",
-            "**/domain/*",
-            "**/dto/*",
-            "**/util/*",
-            "**/web/*",
-            "**/service/mapper*",
             "**/*CustomerService*",
             "**/config/*Configuration.*"
     ]
@@ -44,6 +52,8 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok:1.18.34'
     implementation 'org.mapstruct:mapstruct:1.6.2'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
+
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

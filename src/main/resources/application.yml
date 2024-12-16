@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: spacecatsmarket
+
+application:
+  feature:
+    toggles:
+      cosmoCats: true
+      kittyProducts: false
+
+      
