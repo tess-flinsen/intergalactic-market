@@ -1,188 +1,203 @@
 package com.example.spacecatsmarket.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Stream;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import jakarta.persistence.PersistenceException;
+import java.util.*;
+import org.hibernate.exception.JDBCConnectionException;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 
+import com.example.spacecatsmarket.AbstractIt;
 import com.example.spacecatsmarket.domain.Category;
+import com.example.spacecatsmarket.domain.Customer;
 import com.example.spacecatsmarket.domain.Product;
+import com.example.spacecatsmarket.repository.CategoryRepository;
+import com.example.spacecatsmarket.repository.CustomerRepository;
+import com.example.spacecatsmarket.repository.ProductRepository;
+import com.example.spacecatsmarket.repository.entity.CategoryEntity;
+import com.example.spacecatsmarket.repository.entity.CustomerEntity;
+import com.example.spacecatsmarket.repository.entity.ProductEntity;
 import com.example.spacecatsmarket.service.exception.PermissionDeniedException;
-import com.example.spacecatsmarket.service.exception.CustomerNotFoundException;
-import com.example.spacecatsmarket.service.exception.ProductNotFoundException;
+import com.example.spacecatsmarket.service.exception.ProductAlreadyExistsException;
 import com.example.spacecatsmarket.service.exception.ProductListEmptyException;
-import com.example.spacecatsmarket.service.impl.CustomerServiceImpl;
-import com.example.spacecatsmarket.service.impl.ProductServiceImpl;
+import com.example.spacecatsmarket.service.exception.ProductNotFoundException;
+import com.example.spacecatsmarket.service.mapper.CategoryMapper;
+import com.example.spacecatsmarket.service.mapper.ProductMapper;
 
-@SpringBootTest(classes = { ProductServiceImpl.class, CustomerServiceImpl.class })
-@DisplayName("Product Service Tests")
-@TestMethodOrder(OrderAnnotation.class)
-public class ProductServiceTest {
-    @Autowired
-    private CustomerService customerService;
+@DisplayName("Product Service Tests with Testcontainers")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class ProductServiceTest extends AbstractIt {
+    @Autowired private ProductService productService;
+    @SpyBean @Autowired private ProductRepository productRepository;
+    @Autowired private CustomerRepository customerRepository;
+    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private ProductMapper productMapper;
+    @Autowired private CategoryMapper categoryMapper;
 
-    @Autowired
-    private ProductService productService;
-
-    private static List<Product> products;
-    private static Integer expectedProductsSize = 5;
+    private static UUID newProductId;
     private static String newProductName = "Space Test product";
     private static String updatedProductName = "Updated Space product";
-    private static UUID newProductId;
-    private static Long newProductOwnerId = 1L;
-    private static Long otherProductOwnerId = 2L;
-    private static Category testCategory = Category.builder()
-            .id(3)
-            .name("Cosmic Test")
-            .build();
+    private static Long newProductOwnerId;
+    private static Long otherProductOwnerId;
 
-    static Stream<Product> provideProducts() {
-        return products.stream();
+    @AfterEach
+    void cleanUp() {
+      productRepository.deleteAll();
+      customerRepository.deleteAll();
+      categoryRepository.deleteAll();
+    }
+
+    @BeforeEach
+    void setUp() {
+        reset(productRepository);
+        CustomerEntity customerCreate =
+            customerRepository.save(
+                CustomerEntity.builder().name("Owner 1").address("Address-1").email("one@gmail.com").build());
+        CustomerEntity customerUpdate =
+            customerRepository.save(
+                CustomerEntity.builder().name("Owner 2").address("Address-2").email("two@gmail.com").build());
+
+        CategoryEntity category =
+            categoryRepository.save(CategoryEntity.builder().name("Test Category").build());
+
+        ProductEntity product1 =
+            ProductEntity.builder()
+                .id(UUID.randomUUID())
+                .name("Product 1")
+                .description("Description 1")
+                .price(99.99)
+                .stockCount(10)
+                .owner(customerCreate)
+                .category(category)
+                .build();
+        ProductEntity product2 =
+            ProductEntity.builder()
+                .id(UUID.randomUUID())
+                .name("Product 2")
+                .description("Description 2")
+                .price(14.50)
+                .stockCount(10)
+                .owner(customerUpdate)
+                .category(category)
+                .build();
+
+        productRepository.save(product1);
+        productRepository.save(product2);
+
+        newProductOwnerId = customerCreate.getId();
+        otherProductOwnerId = customerUpdate.getId();
     }
 
     @Test
     @Order(1)
     void shouldReturnAllProducts() {
-        products = productService.getAllProducts();
+        List<Product> products = productService.getAllProducts();
         assertNotNull(products);
-        assertEquals(expectedProductsSize, products.size());
+        assertEquals(2, products.size());
     }
 
-    @ParameterizedTest
-    @MethodSource("provideProducts")
+    @Test
     @Order(2)
-    void shouldReturnProductByID(Product expectedProduct) {
-        Product actualProduct = productService.getProductById(expectedProduct.getId());
-        assertEquals(expectedProduct, actualProduct, "Product should match");
+    void shouldReturnProductByID() {
+        ProductEntity productEntity = productRepository.findAll().iterator().next();
+        Product product = productService.getProductById(productEntity.getId());
+        assertNotNull(product);
+        assertEquals(productEntity.getName(), product.getName());
     }
 
     @Test
     @Order(3)
-    void shouldThrowExceptionForNonExistentProductID() {
-        UUID nonExistentId = UUID.randomUUID();
-        assertThrows(ProductNotFoundException.class,
-                () -> productService.getProductById(nonExistentId),
-                "Expected ProductNotFoundException for a non-existent product ID");
-    }
-
-    @Test
-    @Order(4)
     void shouldCreateProduct() {
-        Product newProduct = Product.builder()
+        Product newProduct =
+            Product.builder()
                 .name(newProductName)
-                .description("Test description for a space product")
-                .price(99.99)
-                .stockCount(10)
-                .category(testCategory)
-                .owner(customerService.getCustomerDetailsById(newProductOwnerId))
+                .category(
+                    categoryMapper.fromCategoryEntity(categoryRepository.findAll().iterator().next()))
+                .owner(Customer.builder().id(newProductOwnerId).build())
                 .build();
 
         newProductId = productService.createProduct(newProduct, newProductOwnerId);
         Product createdProduct = productService.getProductById(newProductId);
 
-        assertNotNull(createdProduct, "Created product should not be null");
-        assertEquals(newProduct.getName(), createdProduct.getName(), "Product name should match");
-        assertEquals("Test description for a space product", createdProduct.getDescription(), "Product description should match");
-        assertEquals(99.99, createdProduct.getPrice(), "Product price should match");
-        assertEquals(10, createdProduct.getStockCount(), "Product stock count should match");
-        assertEquals(newProductOwnerId, createdProduct.getOwner().getId(), "Product owner ID should match");
+        assertNotNull(createdProduct);
+        assertEquals(newProductName, createdProduct.getName());
+        assertThrows(
+            ProductAlreadyExistsException.class,
+            () -> productService.createProduct(newProduct, newProductOwnerId));
+    }
 
-        expectedProductsSize++;
-        assertEquals(expectedProductsSize, productService.getAllProducts().size(), "Product list size should be updated after creation");
+    @Test
+    @Order(4)
+    void shouldUpdateProduct() {
+        ProductEntity existingProduct = productRepository.findAll().iterator().next();
+        String oldProductName = existingProduct.getName();
+        Product updatedProduct =
+            productMapper.fromProductEntity(existingProduct).toBuilder()
+                .name(updatedProductName)
+                .build();
+
+        productService.updateProduct(updatedProduct, newProductOwnerId);
+        Product result = productService.getProductById(existingProduct.getId());
+
+        assertNotNull(result);
+        assertEquals(updatedProductName, result.getName());
+        Product revertedProduct = updatedProduct.toBuilder().name(oldProductName).build();
+        assertThrows(
+            PermissionDeniedException.class,
+            () -> productService.updateProduct(revertedProduct, otherProductOwnerId));
     }
 
     @Test
     @Order(5)
-    void shouldThrowCustomerNotFound() {
-        Product newProduct = Product.builder()
-                .name(newProductName)
-                .description("Test description for a space product")
-                .price(99.99)
-                .stockCount(10)
-                .category(testCategory)
+    void throwsExceptionWhenUpdatingProductWithExistingName() {
+        ProductEntity existingProduct = productRepository.findAll().iterator().next();
+        Product productWithExistingName =
+            Product.builder()
+                .id(newProductId)
+                .name(existingProduct.getName())
+                .category(Category.builder().name(existingProduct.getCategory().getName()).build())
+                .owner(Customer.builder().id(newProductOwnerId).build())
                 .build();
-
-        assertThrows(CustomerNotFoundException.class,
-                () -> productService.createProduct(newProduct, -1L),
-                "Creating a product with an invalid customer ID should throw CustomerNotFoundException");
+        assertThrows(
+            ProductAlreadyExistsException.class,
+            () -> productService.updateProduct(productWithExistingName, newProductOwnerId));
     }
 
     @Test
     @Order(6)
-    void shouldUpdateProduct() {
-        Product newProduct = Product.builder()
-                .name(newProductName)
-                .description("Initial description")
-                .price(99.99)
-                .stockCount(20)
-                .category(testCategory)  
-                .owner(customerService.getCustomerDetailsById(newProductOwnerId))
-                .build();
-        
-        newProductId = productService.createProduct(newProduct, newProductOwnerId);
-        
-        Product productToUpdate = productService.getProductById(newProductId);
-        Product updatedProduct = productToUpdate.toBuilder()
-                .name(updatedProductName)  
-                .price(120.00)  
-                .build();
-        
-        productService.updateProduct(updatedProduct, newProductOwnerId);
-        Product updatedProductFromService = productService.getProductById(newProductId);
-        
-        assertEquals(updatedProductName, updatedProductFromService.getName(), "Product name should match with updated version");
-        assertEquals(120.00, updatedProductFromService.getPrice(), "Price should match with updated version");
-        assertEquals(newProductOwnerId, updatedProductFromService.getOwner().getId(),"Product owner id should remain the same");
+    void shouldDeleteProduct() {
+        ProductEntity existingProduct = productRepository.findAll().iterator().next();
+
+        productService.deleteProductById(existingProduct.getId(), newProductOwnerId);
+        assertThrows(
+            ProductNotFoundException.class,
+            () -> productService.getProductById(existingProduct.getId()));
     }
 
     @Test
     @Order(7)
-    void shouldDeleteProduct() {
-        Product productToDelete = Product.builder()
-            .name("Product to Delete")
-            .description("Description for deletion test")
-            .price(59.99)
-            .stockCount(15)
-            .category(testCategory)
-            .owner(customerService.getCustomerDetailsById(newProductOwnerId))
-            .build();
-        
-        UUID productIdToDelete = productService.createProduct(productToDelete, newProductOwnerId);
-        
-        assertThrows(PermissionDeniedException.class,
-                () -> productService.deleteProductById(productIdToDelete, otherProductOwnerId));
-
-        assertThrows(ProductNotFoundException.class,
-                () -> productService.deleteProductById(UUID.randomUUID(), otherProductOwnerId));
-
-        productService.deleteProductById(productIdToDelete, newProductOwnerId);
-        assertThrows(ProductNotFoundException.class,
-                () -> productService.getProductById(productIdToDelete));
+    void shouldThrowProductNotFound() {
+        UUID randomId = UUID.randomUUID();
+        assertThrows(ProductNotFoundException.class, () -> productService.getProductById(randomId));
     }
 
     @Test
     @Order(8)
     void shouldThrowProductsNotFound() {
-        products = productService.getAllProducts();
-        List<Product> productsCopy = new ArrayList<>(products);
-        for (Product p : productsCopy) {
-            productService.deleteProductById(p.getId(), p.getOwner().getId());
-        }
-        assertThrows(ProductListEmptyException.class,
-                () -> productService.getAllProducts());
+        productRepository.deleteAll();
+        assertThrows(ProductListEmptyException.class, () -> productService.getAllProducts());
+    }
+
+    @Test
+    @Order(9)
+    void shouldThrowPersistenceException() {
+        UUID randomId = UUID.randomUUID();
+        when(productRepository.findById(randomId)).thenThrow(JDBCConnectionException.class);
+        assertThrows(PersistenceException.class, () -> productService.getProductById(randomId));
     }
 }

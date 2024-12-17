@@ -1,57 +1,66 @@
 package com.example.spacecatsmarket.service.impl;
 
 import com.example.spacecatsmarket.domain.Customer;
+import com.example.spacecatsmarket.repository.CustomerRepository;
+import com.example.spacecatsmarket.repository.entity.CustomerEntity;
 import com.example.spacecatsmarket.service.CustomerService;
 import com.example.spacecatsmarket.service.exception.CustomerNotFoundException;
-import java.util.List;
+import com.example.spacecatsmarket.service.mapper.CustomerMapper;
+
+import jakarta.persistence.PersistenceException;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
 
-    private final List<Customer> customerDetails = buildAllCustomerDetailsMock();
+    final CustomerRepository repository;
+    final CustomerMapper mapper;
 
     @Override
-    public List<Customer> getAllCustomerDetails() {
-        return customerDetails;
+    @Transactional(readOnly = true)
+    public Customer getCustomerDetailsById(Long id) {
+        Optional<CustomerEntity> customerEntityOptional = null;
+        try {
+            customerEntityOptional = repository.findById(id);
+        } catch (Exception e) {
+            throw new PersistenceException(e);
+        }
+        if (customerEntityOptional.isEmpty()) {
+            throw new CustomerNotFoundException(id);
+        }
+        return mapper.fromCustomerEntity(customerEntityOptional.get());
     }
 
     @Override
-    public Customer getCustomerDetailsById(Long customerId) {
-        return Optional.of(customerDetails.stream()
-            .filter(details -> details.getId().equals(customerId)).findFirst())
-            .get()
-            .orElseThrow(() -> {
-                log.info("Customer with id {} not found in mock", customerId);
-                return new CustomerNotFoundException(customerId);
-            });
+    public Customer createCustomer(Customer customer) {
+        try {
+            return mapper.fromCustomerEntity(repository.save(mapper.toCustomerEntity(customer)));
+        } catch (Exception e) {
+            throw new PersistenceException(e);
+        }
     }
 
-    private List<Customer> buildAllCustomerDetailsMock() {
-        return List.of(
-            Customer.builder()
-                .id(1L)
-                .name("Alice Johnson")
-                .address("123 Cosmic Lane, Catnip City")
-                .phoneNumber("123-456-7890")
-                .email("alice@example.com")
-                .build(),
-            Customer.builder()
-                .id(2L)
-                .name("Bob Smith")
-                .address("456 Galactic Blvd, Star Town")
-                .phoneNumber("987-654-3210")
-                .email("bob@example.com")
-                .build(),
-            Customer.builder()
-                .id(3L)
-                .name("Charlie Brown")
-                .address("789 Nebula Road, Space Village")
-                .phoneNumber("555-123-4567")
-                .email("charlie@example.com")
-                .build());
+    @Override
+    public void deleteCustomerById(Long id) {
+        try {
+            repository.deleteById(id);
+        } catch (Exception e) {
+            throw new PersistenceException(e);
+        }
+    }
+
+    @Override
+    public void updateCustomer(Customer customer) {
+        try {
+            repository.save(mapper.toCustomerEntity(customer));
+        } catch (Exception e) {
+            throw new PersistenceException(e);
+        }
     }
 }
