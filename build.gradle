@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.3.5'
 	id 'io.spring.dependency-management' version '1.1.6'
+	id 'org.barfuin.gradle.jacocolog' version '3.1.0'
 }
 
 group = 'com.example'
@@ -17,10 +18,42 @@ repositories {
 	mavenCentral()
 }
 
+ext {
+    minimumCoveragePerFile = 0.5
+    filesExcludedFromCoverage = [
+            "**/*SpaceCatesMarketApplication.*",
+            "**/domain/*",
+            "**/dto/*",
+            "**/util/*",
+            "**/web/*",
+            "**/service/mapper*",
+            "**/*CustomerService*",
+            "**/config/*Configuration.*"
+    ]
+}
+
+apply from: "${rootProject.projectDir}/gradle/test.gradle"
+apply from: "${rootProject.projectDir}/gradle/jacoco.gradle"
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	implementation 'jakarta.validation:jakarta.validation-api:3.1.0'
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+	annotationProcessor 'org.projectlombok:lombok:1.18.34'
+    implementation 'org.mapstruct:mapstruct:1.6.2'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.34'
+	testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
+    implementation 'org.springframework.boot:spring-boot-starter-validation:3.3.4'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.springframework.security:spring-security-test'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 }
 
 tasks.named('test') {

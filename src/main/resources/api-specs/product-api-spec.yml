@@ -1,0 +1,299 @@
+openapi: 3.0.0
+info:
+  title: Product API
+  description: API for managing products in an intergalactic marketplace.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local server
+tags:
+  - name: products
+    description: Endpoints related to product management
+
+paths:
+   /v1/products:
+    get:
+      tags:
+        - products
+      summary: Get all products 
+      responses:
+        '200':
+          description: List of all products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListDto'
+        '404':
+          description: No available products in the marketplace.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: 
+        - products
+      summary: Create a new product
+      requestBody:
+        description: Product data to create a new product
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDetailsDto'
+      responses:
+        '201':
+          description: Product successfully created
+          headers:
+            Location:
+              schema:
+                type: string
+                example: '/v1/products/550e8400-e29b-41d4-a716-446655440000'
+              description: Direct URL to the newly created product
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '409':
+          description: Product already exists
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+                  
+   /v1/products/{id}:
+    get:
+      summary: Get product by id
+      tags:
+        - products
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Unique UUID of the product to get
+      responses:
+        '200':
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductEntry'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+    put:
+      summary: Update an existing product
+      tags:
+        - products
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Unique UUID of the product to update
+      requestBody:
+        description: Updated product data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDetailsDto'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductEntry'
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      summary: Delete an existing product
+      tags:
+        - products
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Unique UUID of the product to delete
+      responses:
+        '204':
+          description: Product successfully deleted
+        '403':
+          description: Deletion forbidden due to insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+components:
+  schemas:
+  
+    ProductListDto:
+      type: object
+      properties:
+        productEntries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductEntry'
+            
+    ProductEntry:
+      type: object
+      required:
+        - id
+        - name
+        - price
+        - category
+        - owner
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Product UUID assigned by the system.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        name:
+          type: string
+          description: Name of the product.
+          example: Cosmic Catnip Spray
+          minLength: 2
+          maxLength: 50
+        description:
+          type: string
+          description: Brief product description.
+          example: A delightful spray infused with rare interstellar catnip from the Andromeda galaxy.
+          minLength: 10
+          maxLength: 300
+        price:
+          type: number
+          format: double
+          description: Product price in credits.
+          example: 10.99
+          minimum: 0.01
+          maximum: 100000.00
+        stockCount:
+          type: integer
+          description: Available stock quantity.
+          example: 50
+          minimum: 0
+          maximum: 10000
+        category:
+          type: integer
+          description: Identifier of product category.
+          example: 42
+          minimum: 1
+        owner:
+          type: integer
+          description: Identifier of the customer who owns the product.
+          example: 1234567890
+          minimum: 1
+
+    ProductDetailsDto:
+      type: object
+      required:
+        - name
+        - price
+        - category
+        - owner
+      properties:
+        name:
+          type: string
+          description: Product name
+        description:
+          type: string
+          description: Brief product description
+        price:
+          type: number
+          format: double
+          description: Product price in credits
+        stockCount:
+          type: integer
+          description: Available stock quantity
+        category:
+          type: object
+          description: Product category
+        owner:
+          type: object
+          description: Customer who owns the product
+
+        
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - error
+        - message
+        - path
+      properties:
+        status:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: Not found
+        message:
+          type: string
+          example: "Product with ID 550e8400-e29b-41d4-a716-446655440000 not found."
+        path:
+          type: string
+          example: /v1/products/550e8400-e29b-41d4-a716-446655440000
+          
+    ValidationError:
+      type: object
+      required:
+        - status
+        - violations
+      properties:
+        status:
+          type: string
+          example: "400"
+          description: HTTP status code for the validation error
+        violations:
+          type: array
+          description: List of field-specific validation errors
+          items:
+            $ref: '#/components/schemas/Violation'
+      
+    Violation:
+      type: object
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+          description: Field where the validation error occurred
+          example: "name"
+        message:
+          type: string
+          description: Explanation of the validation error
+          example: "Must be between 2 and 50 characters."
