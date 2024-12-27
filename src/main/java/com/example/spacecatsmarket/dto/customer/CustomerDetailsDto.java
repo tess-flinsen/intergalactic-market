@@ -26,7 +26,6 @@ public class CustomerDetailsDto {
     @ValidSpaceAddress(groups = ExtendedValidation.class)
     String address;
 
-    @NotBlank(message = "Phone number is mandatory")
     @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Phone number must be valid")
     String phoneNumber;
 
