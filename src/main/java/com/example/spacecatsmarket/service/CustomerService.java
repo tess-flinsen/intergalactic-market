@@ -1,11 +1,10 @@
 package com.example.spacecatsmarket.service;
 
 import com.example.spacecatsmarket.domain.Customer;
-import java.util.List;
 
 public interface CustomerService {
-
-    List<Customer> getAllCustomerDetails();
-
-    Customer getCustomerDetailsById(Long customerId);
+    Customer getCustomerDetailsById(Long id);
+    Customer createCustomer(Customer customer);
+    void deleteCustomerById(Long id);
+    void updateCustomer(Customer customer);
 }

@@ -54,12 +54,12 @@ public class ProductController {
     @Operation(summary = "Get product by ID", description = "Retrieve a product by its unique ID.")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Product found", 
-                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDetailsDto.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDetailsDto.class))),
         @ApiResponse(responseCode = "404", description = "Product not found", 
-                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)))
     })
-    @GetMapping("/{id}")
-    public ResponseEntity<ProductDetailsDto> getProductById(@PathVariable UUID id) {
+    @GetMapping("/{productId}")
+    public ResponseEntity<ProductDetailsDto> getProductById(@PathVariable("productId") UUID id) {
         Product product = productService.getProductById(id);
         ProductDetailsDto productDetailsDto = productMapper.toProductDetailsDto(product);
         return ResponseEntity.ok(productDetailsDto);
@@ -78,7 +78,7 @@ public class ProductController {
                     content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     public ResponseEntity<ProductDetailsDto> createProduct(
-        @RequestBody @Valid ProductDetailsDto productDetailsDto, @RequestHeader Long customerId) {
+        @RequestBody @Valid ProductDetailsDto productDetailsDto, @RequestHeader("customerId") Long customerId) {
         UUID productId = productService.createProduct(productMapper.toProduct(productDetailsDto), customerId);
         ProductDetailsDto createdProductDto = productMapper.toProductDetailsDto(
             productService.getProductById(productId)
@@ -88,7 +88,7 @@ public class ProductController {
     }
 
 
-    @PutMapping("/{id}")
+    @PutMapping("/{productId}")
     @Operation(summary = "Update an existing product", description = "Update the details of a product by its ID.")
     @ApiResponses({
         @ApiResponse(
@@ -105,7 +105,7 @@ public class ProductController {
         )
     })
     public ResponseEntity<?> updateProduct(
-        @PathVariable UUID id,
+        @PathVariable("productId") UUID id,
         @RequestBody ProductDetailsDto productDetailsDto,
         @RequestHeader Long customerId) {
         Product product = productMapper.toProduct(productDetailsDto);
@@ -123,13 +123,11 @@ public class ProductController {
         @ApiResponse(responseCode = "204", description = "Product successfully deleted"),
         @ApiResponse(responseCode = "403", description = "Deletion forbidden due to insufficient permissions", 
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class))),
-        @ApiResponse(responseCode = "404", description = "Product not found", 
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetail.class)))
     })
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{productId}")
     public ResponseEntity<?> deleteProduct(
-        @PathVariable UUID productId, @RequestHeader Long customerId) {
-        productService.deleteProductById(productId, customerId);
+        @PathVariable("productId") UUID id, @RequestHeader("customerId") Long customerId) {
+        productService.deleteProductById(id, customerId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
