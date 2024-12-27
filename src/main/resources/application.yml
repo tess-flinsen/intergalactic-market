@@ -1,6 +1,19 @@
 spring:
   application:
     name: spacecatsmarket
+  datasource:
+    url: jdbc:postgresql://localhost:5432/SpacecatsmarketDB
+    username: postgres
+    password: haP17PY
+  liquibase:
+    change-log: classpath:liquibase/changelog.yaml
+    enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 application:
   feature:

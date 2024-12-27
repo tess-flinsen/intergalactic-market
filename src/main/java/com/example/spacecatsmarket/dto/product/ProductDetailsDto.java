@@ -42,11 +42,9 @@ public class ProductDetailsDto {
     @Max(value = 10000, message = "Stock count could not exceed 10,000")
     int stockCount;
 
-    @NotBlank(message = "Category could not be blank")
     @Valid 
     CategoryDto category;
 
-    @NotBlank(message = "Owner could not be blank")
     @Valid 
     CustomerDetailsDto owner;
 }
